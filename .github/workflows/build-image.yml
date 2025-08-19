@@ -103,10 +103,29 @@ jobs:
       - name: Build and push Docker images to ghcr.io
         uses: docker/build-push-action@v5
         with:
-          build-args: |
-            ANKI_VERSION=${{ needs.get-latest-tag.outputs.tag }}
           context: .
           file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+      - name: Docker cpu-meta
+        id: cpu-meta
+        uses: docker/metadata-action@v5
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            ghcr.io/${{ github.actor }}/Kitten-TTS-Server
+          tags: |
+            type=ref,event=tag
+            type=raw,value=cpu-${{ needs.get-latest-tag.outputs.tag }}
+
+      - name: Build and push cpu Docker images to ghcr.io
+        uses: docker/build-push-action@v5
+        with:
+          build-args: |
+            RUNTIME=cpu
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.cpu-meta.outputs.tags }}
+          labels: ${{ steps.cpu-meta.outputs.labels }}
